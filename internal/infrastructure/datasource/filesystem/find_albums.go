@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"hypersonic/internal/domain"
-	"hypersonic/internal/pkg/id3v2"
+	"hypersonic/internal/pkg/audio"
+	audio_tag "hypersonic/internal/pkg/audio/tag"
 	"hypersonic/internal/pkg/tree"
 	"hypersonic/internal/usecase/search"
 	"io/fs"
@@ -80,7 +81,7 @@ var (
 	errDirNotContainsAnyAudioFiles = errors.New("album dir not contains any audio files")
 )
 
-func inspectAlbumInDir(fsys fs.FS, albumDirPath string) (tag id3v2.Tag, err error) {
+func inspectAlbumInDir(fsys fs.FS, albumDirPath string) (tag audio_tag.Tag, err error) {
 	err = fs.WalkDir(fsys, albumDirPath, func(trackPath string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to filepath.WalkDir: %w", err)
@@ -89,27 +90,27 @@ func inspectAlbumInDir(fsys fs.FS, albumDirPath string) (tag id3v2.Tag, err erro
 			return nil
 		}
 
-		if isSupportedAudioFile(trackPath) {
-			file, err := fsys.Open(trackPath)
-			if err != nil {
-				return fmt.Errorf("failed to open audio file (%s): %w", trackPath, err)
-			}
-
-			id3v2Tag, err := id3v2.Read(file)
-			if err != nil {
-				return err
-			}
-			tag = id3v2Tag
-
-			return fs.SkipDir // Found the first audio file, no need to continue walking
+		file, err := fsys.Open(trackPath)
+		if err != nil {
+			return fmt.Errorf("failed to open audio file (%s): %w", trackPath, err)
 		}
-		return nil
+		defer file.Close()
+
+		parsedTag, err := audio.ReadTag(file)
+		if errors.Is(err, audio.ErrUnupportedFileFormat) {
+			return nil // Skip unsupported file
+		}
+		if err != nil {
+			return err
+		}
+		tag = parsedTag
+		return fs.SkipDir // Found the first audio file, no need to continue walking
 	})
 	if err != nil {
-		return id3v2.Tag{}, fmt.Errorf("failed to find audio file: %w", err)
+		return audio_tag.Tag{}, fmt.Errorf("failed to find audio file: %w", err)
 	}
 	if /* album dir not contains any audio files */ tag.Title == "" {
-		return id3v2.Tag{}, errDirNotContainsAnyAudioFiles
+		return audio_tag.Tag{}, errDirNotContainsAnyAudioFiles
 	}
 
 	return tag, nil
