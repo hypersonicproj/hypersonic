@@ -29,13 +29,17 @@ func (r *queryResolver) Albums(ctx context.Context, sort *model.SortAlbumsBy, or
 	}
 	var albums []*model.Album
 	for _, _album := range _albums {
-		album := _album.Get()
-		albums = append(albums, &model.Album{
+		__album := _album.Get()
+		album := model.Album{
 			ID:      _album.Id().Text(),
-			Title:   album.Title,
-			Artist:  album.AlbumArtist.Name,
-			AddedAt: album.ReleasedAt.Format(time.RFC3339),
-		})
+			Title:   __album.Title,
+			Artist:  __album.AlbumArtist.Name,
+			AddedAt: __album.AddedAt.Format(time.RFC3339),
+		}
+		if __album.ReleasedAt != nil {
+			album.ReleaseDate = __album.ReleasedAt.Format(time.RFC3339)
+		}
+		albums = append(albums, &album)
 	}
 	return albums, nil
 }
