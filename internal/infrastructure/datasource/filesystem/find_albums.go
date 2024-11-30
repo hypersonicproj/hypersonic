@@ -97,7 +97,7 @@ func inspectAlbumInDir(fsys fs.FS, albumDirPath string) (tag audio_tag.Tag, err 
 		defer file.Close()
 
 		parsedTag, err := audio.ReadTag(file)
-		if errors.Is(err, audio.ErrUnupportedFileFormat) {
+		if errors.Is(err, audio.ErrUnsupportedFileFormat) {
 			return nil // Skip unsupported file
 		}
 		if err != nil {

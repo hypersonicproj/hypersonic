@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrUnupportedFileFormat = errors.New("unsupported file format")
+	ErrUnsupportedFileFormat = errors.New("unsupported file format")
 )
 
 func ReadTag(file fs.File) (audio_tag.Tag, error) {
@@ -25,6 +25,6 @@ func ReadTag(file fs.File) (audio_tag.Tag, error) {
 	case ".m4a":
 		return mp4.Read(file)
 	default:
-		return audio_tag.Tag{}, ErrUnupportedFileFormat
+		return audio_tag.Tag{}, ErrUnsupportedFileFormat
 	}
 }
