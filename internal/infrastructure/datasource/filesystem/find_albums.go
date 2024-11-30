@@ -81,8 +81,10 @@ func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
 		}
 
 		var releasedAtP *time.Time
-		if releasedAt, err := time.Parse(time.DateOnly, tag.Release[:10]); err == nil {
-			releasedAtP = &releasedAt
+		if len(tag.Release) >= 10 {
+			if releasedAt, err := time.Parse(time.DateOnly, tag.Release[:10]); err == nil {
+				releasedAtP = &releasedAt
+			}
 		}
 
 		albumDirInfo, err := albumDir.Info()
