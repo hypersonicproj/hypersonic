@@ -7,5 +7,6 @@ type Tag struct {
 	AlbumArtist string
 	Genre       string
 	Year        string
+	Release     string
 	Track       string
 }

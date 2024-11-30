@@ -5,19 +5,21 @@ import (
 	"time"
 )
 
-func LoadAlbum(publisherName string, title string, addedAt time.Time) Album {
+func LoadAlbum(publisherName string, title string, releasedAt *time.Time, addedAt time.Time) Album {
 	return &album{
 		Title: title,
 		AlbumArtist: AlbumArtist{
 			Name: publisherName,
 		},
-		AddedAt: addedAt,
+		ReleasedAt: releasedAt,
+		AddedAt:    addedAt,
 	}
 }
 
 type album struct {
 	Title       string
 	AlbumArtist AlbumArtist
+	ReleasedAt  *time.Time
 	AddedAt     time.Time
 }
 

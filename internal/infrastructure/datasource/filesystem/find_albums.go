@@ -10,15 +10,27 @@ import (
 	"hypersonic/internal/usecase/search"
 	"io/fs"
 	"strings"
+	"time"
 )
 
-func (s *filesystem) FindAlbumsAddedDesc(option search.FindOption) ([]domain.Album, error) {
+func (s *filesystem) FindAlbumsReleaseDateDesc(option search.FindOption) ([]domain.Album, error) {
 	var root *tree.Node[domain.Album]
 	err := walkAlbumDir(s.read, func(album domain.Album) {
-		albumAddedDescending := func(new, curr domain.Album) (isLeft bool) {
-			return new.Get().AddedAt.After(curr.Get().AddedAt)
+		albumReleaseDateAddedAtDescending := func(new, curr domain.Album) (isLeft bool) {
+			_new := new.Get()
+			_curr := curr.Get()
+			if _new.ReleasedAt == nil {
+				return _curr.ReleasedAt == nil
+			} else if _curr.ReleasedAt == nil {
+				return _new.ReleasedAt != nil
+			}
+			if /* same release date */
+			_new.ReleasedAt.Format(time.DateOnly) == _curr.ReleasedAt.Format(time.DateOnly) {
+				return _new.AddedAt.After(_curr.AddedAt)
+			}
+			return _new.ReleasedAt.After(*_curr.ReleasedAt)
 		}
-		root = tree.Insert(root, album, albumAddedDescending)
+		root = tree.Insert(root, album, albumReleaseDateAddedAtDescending)
 	})
 	if err != nil {
 		return nil, err
@@ -46,17 +58,19 @@ func (s *filesystem) FindAlbumsNameAsc(option search.FindOption) ([]domain.Album
 	return albumList, nil
 }
 
+var (
+	ErrInvalidDateFormat = errors.New("invalid date format")
+)
+
 func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
 	return fs.WalkDir(fsys, ".", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to filepath.WalkDir: %w", err)
 		}
-		if !entry.IsDir() {
+		if /* not album directory */ !entry.IsDir() || !strings.Contains(path, "/") {
 			return nil // skip
 		}
-		if !strings.Contains(path, "/") {
-			return nil // skip
-		}
+		albumDir := entry
 
 		tag, err := inspectAlbumInDir(fsys, path)
 		if errors.Is(err, errDirNotContainsAnyAudioFiles) {
@@ -66,12 +80,17 @@ func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
 			return err
 		}
 
-		info, err := entry.Info()
+		var releasedAtP *time.Time
+		if releasedAt, err := time.Parse(time.DateOnly, tag.Release[:10]); err == nil {
+			releasedAtP = &releasedAt
+		}
+
+		albumDirInfo, err := albumDir.Info()
 		if err != nil {
 			return fmt.Errorf("failed to fs.DirEntry.Info: %w", err)
 		}
 
-		album := domain.LoadAlbum(tag.AlbumArtist, tag.Album, info.ModTime())
+		album := domain.LoadAlbum(tag.AlbumArtist, tag.Album, releasedAtP, albumDirInfo.ModTime())
 		yield(album)
 		return nil
 	})

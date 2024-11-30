@@ -22,6 +22,7 @@ func Read(r io.Reader) (audio_tag.Tag, error) {
 		AlbumArtist: id3v2Tag.GetTextFrame("TPE2").Text,
 		Genre:       id3v2Tag.Genre(),
 		Year:        id3v2Tag.Year(),
+		Release:     id3v2Tag.GetTextFrame("TDRL").Text,
 		Track:       id3v2Tag.GetTextFrame("TRCK").Text,
 	}, nil
 }

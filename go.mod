@@ -1,10 +1,14 @@
 module hypersonic
 
-go 1.22.2
+go 1.23
 
-require github.com/tingtt/mp4tag v1.1.0
+toolchain go1.23.0
+
+require github.com/tingtt/qtffilst v0.1.4
 
 require gitlab.com/osaki-lab/iowrapper v0.0.0-20201210013351-bab12bc19f54 // indirect
+
+require github.com/stretchr/testify v1.9.0 // indirect
 
 require (
 	github.com/bogem/id3v2 v1.2.0

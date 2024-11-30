@@ -4,13 +4,12 @@ import (
 	"fmt"
 	audio_tag "hypersonic/internal/pkg/audio/tag"
 	"io/fs"
-	"strconv"
 
-	"github.com/tingtt/mp4tag"
+	"github.com/tingtt/qtffilst"
 )
 
 func Read(f fs.File) (audio_tag.Tag, error) {
-	reader, err := mp4tag.Reader(f)
+	reader, err := qtffilst.NewReader(f)
 	if err != nil {
 		return audio_tag.Tag{}, fmt.Errorf("failed to open mp4 tag: %w", err)
 	}
@@ -19,13 +18,31 @@ func Read(f fs.File) (audio_tag.Tag, error) {
 		return audio_tag.Tag{}, fmt.Errorf("failed to open mp4 tag: %w", err)
 	}
 
-	return audio_tag.Tag{
-		Title:       mp4Tag.Title,
-		Artist:      mp4Tag.Artist,
-		Album:       mp4Tag.Album,
-		AlbumArtist: mp4Tag.AlbumArtist,
-		Genre:       mp4tag.ResolveGenreName(mp4Tag.Genre),
-		Year:        strconv.Itoa(int(mp4Tag.Year)),
-		Track:       strconv.Itoa(int(mp4Tag.TrackNumber)),
-	}, nil
+	tag := audio_tag.Tag{}
+	if mp4Tag.TitleC != nil {
+		tag.Title = mp4Tag.TitleC.Text
+	}
+	if mp4Tag.Artist != nil {
+		tag.Artist = mp4Tag.Artist.Text
+	}
+	if mp4Tag.AlbumC != nil {
+		tag.Album = mp4Tag.AlbumC.Text
+	}
+	if mp4Tag.AlbumArtist != nil {
+		tag.AlbumArtist = mp4Tag.AlbumArtist.Text
+	}
+	if mp4Tag.GenreC != nil {
+		tag.Genre = mp4Tag.GenreC.Text
+	}
+	if mp4Tag.ContentCreateDate != nil {
+		tag.Year = mp4Tag.ContentCreateDate.Text
+	}
+	if mp4Tag.ReleaseDate != nil {
+		tag.Release = mp4Tag.ReleaseDate.Text
+	}
+	if mp4Tag.TrackNumber != nil {
+		tag.Track = fmt.Sprintf("%d/%d", mp4Tag.TrackNumber.Number, mp4Tag.TrackNumber.Total)
+	}
+
+	return tag, nil
 }

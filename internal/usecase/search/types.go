@@ -5,7 +5,7 @@ import "hypersonic/internal/domain"
 type Search interface {
 	FindPlaylistsCreatedAsc(...FindOptionApplier) ([]domain.Playlist, error)
 
-	FindAlbumsAddedDesc(...FindOptionApplier) ([]domain.Album, error)
+	FindAlbumsReleaseDateDesc(...FindOptionApplier) ([]domain.Album, error)
 	FindAlbumsNameAsc(...FindOptionApplier) ([]domain.Album, error)
 
 	FindArtistsNameAsc(...FindOptionApplier) ([]domain.Artist, error)
@@ -20,7 +20,7 @@ type Search interface {
 type Repository interface {
 	FindPlaylistsCreatedAsc(FindOption) ([]domain.Playlist, error)
 
-	FindAlbumsAddedDesc(FindOption) ([]domain.Album, error)
+	FindAlbumsReleaseDateDesc(FindOption) ([]domain.Album, error)
 	FindAlbumsNameAsc(FindOption) ([]domain.Album, error)
 
 	FindArtistsNameAsc(FindOption) ([]domain.Artist, error)
