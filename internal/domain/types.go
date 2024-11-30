@@ -15,7 +15,7 @@ type Album interface {
 	Get() album
 }
 
-type Publisher struct {
+type AlbumArtist struct {
 	Name string
 }
 

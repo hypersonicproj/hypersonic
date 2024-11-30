@@ -8,7 +8,7 @@ import (
 func LoadAlbum(publisherName string, title string, addedAt time.Time) Album {
 	return &album{
 		Title: title,
-		Publisher: Publisher{
+		AlbumArtist: AlbumArtist{
 			Name: publisherName,
 		},
 		AddedAt: addedAt,
@@ -16,14 +16,14 @@ func LoadAlbum(publisherName string, title string, addedAt time.Time) Album {
 }
 
 type album struct {
-	Title     string
-	Publisher Publisher
-	AddedAt   time.Time
+	Title       string
+	AlbumArtist AlbumArtist
+	AddedAt     time.Time
 }
 
 func (a *album) Id() AlbumId {
 	return AlbumId(&id{
-		text: fmt.Sprintf("%s-%s", a.Publisher.Name, a.Title),
+		text: fmt.Sprintf("%s-%s", a.AlbumArtist.Name, a.Title),
 	})
 }
 

@@ -1,51 +1,23 @@
 package filesystem
 
 import (
+	"errors"
 	"fmt"
 	"hypersonic/internal/domain"
+	"hypersonic/internal/pkg/id3v2"
 	"hypersonic/internal/pkg/tree"
 	"hypersonic/internal/usecase/search"
 	"io/fs"
-	"path/filepath"
 	"strings"
-
-	"github.com/bogem/id3v2"
 )
-
-func albumAddedDescending(new, curr domain.Album) (isLeft bool) {
-	return new.Get().AddedAt.After(curr.Get().AddedAt)
-}
 
 func (s *filesystem) FindAlbumsAddedDesc(option search.FindOption) ([]domain.Album, error) {
 	var root *tree.Node[domain.Album]
-
-	err := fs.WalkDir(s.instance, ".", func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to filepath.WalkDir: %w", err)
+	err := walkAlbumDir(s.instance, func(album domain.Album) {
+		albumAddedDescending := func(new, curr domain.Album) (isLeft bool) {
+			return new.Get().AddedAt.After(curr.Get().AddedAt)
 		}
-		if !entry.IsDir() {
-			return nil // skip
-		}
-		if !strings.Contains(path, "/") {
-			return nil // skip
-		}
-
-		albumTitle, err := inspectAlbumTitleInDir(s.instance, path)
-		if err != nil {
-			return err
-		}
-		if /* album dir not contains any audio files */ albumTitle == "" {
-			return nil // skip
-		}
-
-		info, err := entry.Info()
-		if err != nil {
-			return fmt.Errorf("failed to fs.DirEntry.Info: %w", err)
-		}
-
-		album := domain.LoadAlbum( /* publisherName */ filepath.Base(path), albumTitle, info.ModTime())
 		root = tree.Insert(root, album, albumAddedDescending)
-		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -60,10 +32,43 @@ func (s *filesystem) FindAlbumsNameAsc(option search.FindOption) ([]domain.Album
 	panic("unimplemented")
 }
 
-func inspectAlbumTitleInDir(fsys fs.FS, albumDirPath string) (string, error) {
-	var albumTitle string
+func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
+	return fs.WalkDir(fsys, ".", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to filepath.WalkDir: %w", err)
+		}
+		if !entry.IsDir() {
+			return nil // skip
+		}
+		if !strings.Contains(path, "/") {
+			return nil // skip
+		}
 
-	err := fs.WalkDir(fsys, albumDirPath, func(trackPath string, entry fs.DirEntry, err error) error {
+		tag, err := inspectAlbumInDir(fsys, path)
+		if err != nil && errors.Is(err, errDirNotContainsAnyAudioFiles) {
+			return nil // skip
+		}
+		if err != nil {
+			return err
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return fmt.Errorf("failed to fs.DirEntry.Info: %w", err)
+		}
+
+		album := domain.LoadAlbum(tag.AlbumArtist, tag.Album, info.ModTime())
+		yield(album)
+		return nil
+	})
+}
+
+var (
+	errDirNotContainsAnyAudioFiles = errors.New("album dir not contains any audio files")
+)
+
+func inspectAlbumInDir(fsys fs.FS, albumDirPath string) (tag id3v2.Tag, err error) {
+	err = fs.WalkDir(fsys, albumDirPath, func(trackPath string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to filepath.WalkDir: %w", err)
 		}
@@ -76,21 +81,23 @@ func inspectAlbumTitleInDir(fsys fs.FS, albumDirPath string) (string, error) {
 			if err != nil {
 				return fmt.Errorf("failed to open audio file (%s): %w", trackPath, err)
 			}
-			tag, err := id3v2.ParseReader(file, id3v2.Options{Parse: true})
-			if err != nil {
-				return fmt.Errorf("failed to open id3 tag: %w", err)
-			}
-			defer tag.Close()
 
-			albumTitle = tag.Album()
+			id3v2Tag, err := id3v2.Read(file)
+			if err != nil {
+				return err
+			}
+			tag = id3v2Tag
 
 			return fs.SkipDir // Found the first audio file, no need to continue walking
 		}
 		return nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to find audio file: %w", err)
+		return id3v2.Tag{}, fmt.Errorf("failed to find audio file: %w", err)
+	}
+	if /* album dir not contains any audio files */ tag.Title == "" {
+		return id3v2.Tag{}, errDirNotContainsAnyAudioFiles
 	}
 
-	return albumTitle, nil
+	return tag, nil
 }
