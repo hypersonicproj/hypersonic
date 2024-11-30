@@ -58,7 +58,7 @@ func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
 		}
 
 		tag, err := inspectAlbumInDir(fsys, path)
-		if err != nil && errors.Is(err, errDirNotContainsAnyAudioFiles) {
+		if errors.Is(err, errDirNotContainsAnyAudioFiles) {
 			return nil // skip
 		}
 		if err != nil {
