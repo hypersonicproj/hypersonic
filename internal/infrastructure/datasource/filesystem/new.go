@@ -3,6 +3,8 @@ package filesystem
 import (
 	"hypersonic/internal/usecase/search"
 	"io/fs"
+	"os"
+	"path"
 )
 
 type AbsoluteDirPath string
@@ -24,10 +26,29 @@ type AbsoluteDirPath string
 //
 // This structure allows the repository to organize and search tracks
 // based on artist and album hierarchy.
-func NewRepository(fs fs.FS) search.Repository {
-	return &filesystem{instance: fs}
+func NewRepository(baseDir string) search.Repository {
+	fsR := os.DirFS(baseDir)
+	fsW := newFSW(baseDir)
+	return &filesystem{read: fsR, write: fsW}
 }
 
 type filesystem struct {
-	instance fs.FS
+	read  fs.FS
+	write fsW
+}
+
+type fsW interface {
+	Open(name string) (*os.File, error)
+}
+
+func newFSW(baseDir string) fsW {
+	return fsWritable{baseDir}
+}
+
+type fsWritable struct {
+	baseDir string
+}
+
+func (f fsWritable) Open(name string) (*os.File, error) {
+	return os.Open(path.Join(f.baseDir, name))
 }

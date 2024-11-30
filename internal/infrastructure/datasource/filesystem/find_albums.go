@@ -14,7 +14,7 @@ import (
 
 func (s *filesystem) FindAlbumsAddedDesc(option search.FindOption) ([]domain.Album, error) {
 	var root *tree.Node[domain.Album]
-	err := walkAlbumDir(s.instance, func(album domain.Album) {
+	err := walkAlbumDir(s.read, func(album domain.Album) {
 		albumAddedDescending := func(new, curr domain.Album) (isLeft bool) {
 			return new.Get().AddedAt.After(curr.Get().AddedAt)
 		}
@@ -31,7 +31,7 @@ func (s *filesystem) FindAlbumsAddedDesc(option search.FindOption) ([]domain.Alb
 
 func (s *filesystem) FindAlbumsNameAsc(option search.FindOption) ([]domain.Album, error) {
 	var root *tree.Node[domain.Album]
-	err := walkAlbumDir(s.instance, func(album domain.Album) {
+	err := walkAlbumDir(s.read, func(album domain.Album) {
 		albumNameAscending := func(new, curr domain.Album) (isLeft bool) {
 			return new.Get().Title < curr.Get().Title
 		}
