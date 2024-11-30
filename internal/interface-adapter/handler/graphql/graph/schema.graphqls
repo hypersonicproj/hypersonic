@@ -1,0 +1,107 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Album {
+  id: ID!
+  title: String!
+  artist: String!
+  genre: String!
+  releaseDate: String!
+  year: Int!
+  tracks: [Track!]!
+  addedAt: String!
+}
+
+type Artist {
+  id: ID!
+  name: String!
+  genre: String!
+}
+
+type Track {
+  id: ID!
+  title: String!
+  artist: String!
+  album: String!
+  artistArtist: String!
+  genre: String
+  releaseDate: String!
+  year: Int!
+  trackNumber: Int!
+  addedAt: String!
+}
+
+type Playlist {
+  id: ID!
+  name: String!
+  tracks: [Track!]!
+  createdAt: String!
+}
+
+enum SortAlbumsBy {
+  UNSPECIFIED
+  NAME
+  ARTIST
+  RELEASE
+  ADDED
+}
+
+enum SortArtistsBy {
+  UNSPECIFIED
+  NAME
+}
+
+enum SortTracksBy {
+  UNSPECIFIED
+  NAME
+  RELEASE
+  ADDED
+}
+
+enum SortPlaylistsBy {
+  UNSPECIFIED
+  CREATED
+  NAME
+}
+
+enum Order {
+  ASC
+  DESC
+}
+
+type Query {
+  albums(sort: SortAlbumsBy, order: Order): [Album!]!
+  playlists(sort: SortPlaylistsBy, order: Order): [Playlist!]!
+}
+
+scalar Upload
+
+input UploadFile {
+  filename: String!
+  file: Upload!
+}
+
+input NewTrack {
+  title: String!
+  artist: String!
+  album: String!
+  artistArtist: String!
+  genre: String
+  releaseDate: String!
+  trackNumber: Int!
+  file: Upload!
+}
+
+input NewAlbum {
+  title: String!
+  artist: String!
+  genre: String
+  releaseDate: String!
+  files: [UploadFile!]!
+}
+
+type Mutation {
+  uploadTrack(track: NewTrack!): Track!
+  uploadAlbum(album: NewAlbum!): Album!
+}
