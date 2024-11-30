@@ -29,7 +29,20 @@ func (s *filesystem) FindAlbumsAddedDesc(option search.FindOption) ([]domain.Alb
 }
 
 func (s *filesystem) FindAlbumsNameAsc(option search.FindOption) ([]domain.Album, error) {
-	panic("unimplemented")
+	var root *tree.Node[domain.Album]
+	err := walkAlbumDir(s.instance, func(album domain.Album) {
+		albumNameAscending := func(new, curr domain.Album) (isLeft bool) {
+			return new.Get().Title < curr.Get().Title
+		}
+		root = tree.Insert(root, album, albumNameAscending)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var albumList []domain.Album
+	tree.InOrderTraversal(root, &albumList)
+	return albumList, nil
 }
 
 func walkAlbumDir(fsys fs.FS, yield func(domain.Album)) error {
