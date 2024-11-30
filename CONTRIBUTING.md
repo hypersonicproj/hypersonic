@@ -22,6 +22,27 @@ go run cmd/server/main.go -d ~/Downloads/music
 - graphql playground
   - [http://localhost:8080/hypersonic.v1graphql.MusicLibrary/playground](http://localhost:8080/hypersonic.v1graphql.MusicLibrary/playground)
 
+    ```graphql
+    query ($sort: SortAlbumsBy) {
+      albums(sort: $sort) {
+        id
+        title
+        artist
+        genre
+        releaseDate
+        year
+        tracks {
+          id
+        }
+        addedAt
+      }
+    }
+
+    {
+      "sort": "NAME"
+    }
+    ```
+
 ## Testing
 
 ### Test code
