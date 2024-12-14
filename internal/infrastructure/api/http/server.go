@@ -2,7 +2,7 @@ package http
 
 import (
 	"hypersonic/internal/interface-adapter/handler/graphql"
-	"hypersonic/internal/interface-adapter/handler/graphql/graph"
+	"log/slog"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -12,10 +12,10 @@ import (
 
 type Server struct {
 	addr string
-	deps graph.Dependencies
+	deps graphql.Dependencies
 }
 
-func NewServer(addr string, deps graph.Dependencies) *Server {
+func NewServer(addr string, deps graphql.Dependencies) *Server {
 	return &Server{addr, deps}
 }
 
@@ -27,5 +27,6 @@ func (s *Server) Serve() error {
 	// `/hypersonic.v1graphql.MusicLibrary/playground`
 	mux.Handle("/hypersonic.v1graphql.MusicLibrary/playground", playground.Handler("GraphQL playground", "/hypersonic.v1graphql.MusicLibrary/"))
 
+	slog.Info("http server started on " + s.addr)
 	return http.ListenAndServe(s.addr, h2c.NewHandler(mux, &http2.Server{}))
 }

@@ -71,7 +71,6 @@ type ComplexityRoot struct {
 
 	Playlist struct {
 		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Tracks    func(childComplexity int) int
 	}
@@ -82,16 +81,16 @@ type ComplexityRoot struct {
 	}
 
 	Track struct {
-		AddedAt      func(childComplexity int) int
-		Album        func(childComplexity int) int
-		Artist       func(childComplexity int) int
-		ArtistArtist func(childComplexity int) int
-		Genre        func(childComplexity int) int
-		ID           func(childComplexity int) int
-		ReleaseDate  func(childComplexity int) int
-		Title        func(childComplexity int) int
-		TrackNumber  func(childComplexity int) int
-		Year         func(childComplexity int) int
+		AddedAt     func(childComplexity int) int
+		Album       func(childComplexity int) int
+		AlbumArtist func(childComplexity int) int
+		Artist      func(childComplexity int) int
+		Genre       func(childComplexity int) int
+		ID          func(childComplexity int) int
+		ReleaseDate func(childComplexity int) int
+		Title       func(childComplexity int) int
+		TrackNumber func(childComplexity int) int
+		Year        func(childComplexity int) int
 	}
 }
 
@@ -231,13 +230,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Playlist.CreatedAt(childComplexity), true
 
-	case "Playlist.id":
-		if e.complexity.Playlist.ID == nil {
-			break
-		}
-
-		return e.complexity.Playlist.ID(childComplexity), true
-
 	case "Playlist.name":
 		if e.complexity.Playlist.Name == nil {
 			break
@@ -290,19 +282,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Track.Album(childComplexity), true
 
+	case "Track.albumArtist":
+		if e.complexity.Track.AlbumArtist == nil {
+			break
+		}
+
+		return e.complexity.Track.AlbumArtist(childComplexity), true
+
 	case "Track.artist":
 		if e.complexity.Track.Artist == nil {
 			break
 		}
 
 		return e.complexity.Track.Artist(childComplexity), true
-
-	case "Track.artistArtist":
-		if e.complexity.Track.ArtistArtist == nil {
-			break
-		}
-
-		return e.complexity.Track.ArtistArtist(childComplexity), true
 
 	case "Track.genre":
 		if e.complexity.Track.Genre == nil {
@@ -351,8 +343,8 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 }
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
-	rc := graphql.GetOperationContext(ctx)
-	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
+	opCtx := graphql.GetOperationContext(ctx)
+	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewAlbum,
 		ec.unmarshalInputNewTrack,
@@ -360,7 +352,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	)
 	first := true
 
-	switch rc.Operation.Operation {
+	switch opCtx.Operation.Operation {
 	case ast.Query:
 		return func(ctx context.Context) *graphql.Response {
 			var response graphql.Response
@@ -368,7 +360,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			if first {
 				first = false
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-				data = ec._Query(ctx, rc.Operation.SelectionSet)
+				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
 				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
 					result := <-ec.deferredResults
@@ -398,7 +390,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			data := ec._Mutation(ctx, opCtx.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -831,14 +823,11 @@ func (ec *executionContext) _Album_genre(ctx context.Context, field graphql.Coll
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Album_genre(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -989,8 +978,8 @@ func (ec *executionContext) fieldContext_Album_tracks(_ context.Context, field g
 				return ec.fieldContext_Track_artist(ctx, field)
 			case "album":
 				return ec.fieldContext_Track_album(ctx, field)
-			case "artistArtist":
-				return ec.fieldContext_Track_artistArtist(ctx, field)
+			case "albumArtist":
+				return ec.fieldContext_Track_albumArtist(ctx, field)
 			case "genre":
 				return ec.fieldContext_Track_genre(ctx, field)
 			case "releaseDate":
@@ -1161,14 +1150,11 @@ func (ec *executionContext) _Artist_genre(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Artist_genre(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1205,11 +1191,14 @@ func (ec *executionContext) _Mutation_uploadTrack(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Track)
 	fc.Result = res
-	return ec.marshalOTrack2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐTrack(ctx, field.Selections, res)
+	return ec.marshalNTrack2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐTrack(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_uploadTrack(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1228,8 +1217,8 @@ func (ec *executionContext) fieldContext_Mutation_uploadTrack(ctx context.Contex
 				return ec.fieldContext_Track_artist(ctx, field)
 			case "album":
 				return ec.fieldContext_Track_album(ctx, field)
-			case "artistArtist":
-				return ec.fieldContext_Track_artistArtist(ctx, field)
+			case "albumArtist":
+				return ec.fieldContext_Track_albumArtist(ctx, field)
 			case "genre":
 				return ec.fieldContext_Track_genre(ctx, field)
 			case "releaseDate":
@@ -1279,11 +1268,14 @@ func (ec *executionContext) _Mutation_uploadAlbum(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Album)
 	fc.Result = res
-	return ec.marshalOAlbum2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_uploadAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1324,50 +1316,6 @@ func (ec *executionContext) fieldContext_Mutation_uploadAlbum(ctx context.Contex
 	if fc.Args, err = ec.field_Mutation_uploadAlbum_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Playlist_id(ctx context.Context, field graphql.CollectedField, obj *model.Playlist) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Playlist_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Playlist_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Playlist",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
 	}
 	return fc, nil
 }
@@ -1463,8 +1411,8 @@ func (ec *executionContext) fieldContext_Playlist_tracks(_ context.Context, fiel
 				return ec.fieldContext_Track_artist(ctx, field)
 			case "album":
 				return ec.fieldContext_Track_album(ctx, field)
-			case "artistArtist":
-				return ec.fieldContext_Track_artistArtist(ctx, field)
+			case "albumArtist":
+				return ec.fieldContext_Track_albumArtist(ctx, field)
 			case "genre":
 				return ec.fieldContext_Track_genre(ctx, field)
 			case "releaseDate":
@@ -1638,8 +1586,6 @@ func (ec *executionContext) fieldContext_Query_playlists(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Playlist_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Playlist_name(ctx, field)
 			case "tracks":
@@ -1969,8 +1915,8 @@ func (ec *executionContext) fieldContext_Track_album(_ context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Track_artistArtist(ctx context.Context, field graphql.CollectedField, obj *model.Track) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Track_artistArtist(ctx, field)
+func (ec *executionContext) _Track_albumArtist(ctx context.Context, field graphql.CollectedField, obj *model.Track) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Track_albumArtist(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1983,7 +1929,7 @@ func (ec *executionContext) _Track_artistArtist(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ArtistArtist, nil
+		return obj.AlbumArtist, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2000,7 +1946,7 @@ func (ec *executionContext) _Track_artistArtist(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Track_artistArtist(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Track_albumArtist(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Track",
 		Field:      field,
@@ -2163,14 +2109,11 @@ func (ec *executionContext) _Track_trackNumber(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Track_trackNumber(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4204,9 +4147,6 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "genre":
 			out.Values[i] = ec._Album_genre(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "releaseDate":
 			out.Values[i] = ec._Album_releaseDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4273,9 +4213,6 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "genre":
 			out.Values[i] = ec._Artist_genre(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4322,10 +4259,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_uploadTrack(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "uploadAlbum":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_uploadAlbum(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4360,11 +4303,6 @@ func (ec *executionContext) _Playlist(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Playlist")
-		case "id":
-			out.Values[i] = ec._Playlist_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "name":
 			out.Values[i] = ec._Playlist_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4528,8 +4466,8 @@ func (ec *executionContext) _Track(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "artistArtist":
-			out.Values[i] = ec._Track_artistArtist(ctx, field, obj)
+		case "albumArtist":
+			out.Values[i] = ec._Track_albumArtist(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4547,9 +4485,6 @@ func (ec *executionContext) _Track(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "trackNumber":
 			out.Values[i] = ec._Track_trackNumber(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "addedAt":
 			out.Values[i] = ec._Track_addedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4904,6 +4839,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAlbum2hypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐAlbum(ctx context.Context, sel ast.SelectionSet, v model.Album) graphql.Marshaler {
+	return ec._Album(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNAlbum2ᚕᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Album) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5080,6 +5019,10 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTrack2hypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐTrack(ctx context.Context, sel ast.SelectionSet, v model.Track) graphql.Marshaler {
+	return ec._Track(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTrack2ᚕᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐTrackᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Track) graphql.Marshaler {
@@ -5426,13 +5369,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAlbum2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *model.Album) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Album(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5456,6 +5392,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	return res
 }
 
@@ -5521,13 +5473,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOTrack2ᚖhypersonicᚋinternalᚋinterfaceᚑadapterᚋhandlerᚋgraphqlᚋgraphᚋmodelᚐTrack(ctx context.Context, sel ast.SelectionSet, v *model.Track) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Track(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

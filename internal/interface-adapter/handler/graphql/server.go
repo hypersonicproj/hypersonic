@@ -1,16 +1,22 @@
 package graphql
 
 import (
+	"hypersonic/internal/interface-adapter/handler"
 	"hypersonic/internal/interface-adapter/handler/graphql/graph"
+	"hypersonic/internal/usecase/search"
 	"net/http"
 
-	"github.com/99designs/gqlgen/graphql/handler"
+	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 )
 
-func NewHandler(deps graph.Dependencies) http.Handler {
-	return handler.NewDefaultServer(
+func NewHandler(deps Dependencies) http.Handler {
+	return gqlhandler.NewDefaultServer(
 		graph.NewExecutableSchema(graph.Config{
-			Resolvers: graph.NewResolver(deps),
+			Resolvers: graph.NewResolver(handler.New(deps.Search)),
 		}),
 	)
+}
+
+type Dependencies struct {
+	Search search.Search
 }

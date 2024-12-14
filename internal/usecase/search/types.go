@@ -1,33 +1,34 @@
 package search
 
-import "hypersonic/internal/domain"
+import (
+	"hypersonic/internal/domain/library"
+	"iter"
+)
 
-type Search interface {
-	FindPlaylistsCreatedAsc(...FindOptionApplier) ([]domain.Playlist, error)
-
-	FindAlbumsReleaseDateDesc(...FindOptionApplier) ([]domain.Album, error)
-	FindAlbumsNameAsc(...FindOptionApplier) ([]domain.Album, error)
-
-	FindArtistsNameAsc(...FindOptionApplier) ([]domain.Artist, error)
-
-	FindTracksNameAsc(...FindOptionApplier) ([]domain.Track, error)
-	FindTracksAddedAsc(...FindOptionApplier) ([]domain.Track, error)
-
-	FindTracksInAlbum(domain.Album, ...FindOptionApplier) ([]domain.Track, error)
-	FindTracksInPlaylist(domain.Playlist, ...FindOptionApplier) ([]domain.Track, error)
+type Albums interface {
+	All() iter.Seq2[Album, error]
 }
 
-type Repository interface {
-	FindPlaylistsCreatedAsc(FindOption) ([]domain.Playlist, error)
+type Album struct {
+	library.Album
+	TrackInspector
+}
 
-	FindAlbumsReleaseDateDesc(FindOption) ([]domain.Album, error)
-	FindAlbumsNameAsc(FindOption) ([]domain.Album, error)
+type Playlists interface {
+	All() iter.Seq2[Playlist, error]
+}
 
-	FindArtistsNameAsc(FindOption) ([]domain.Artist, error)
+type Playlist struct {
+	library.Playlist
+	TrackInspector
+}
 
-	FindTracksNameAsc(FindOption) ([]domain.Track, error)
-	FindTracksAddedAsc(FindOption) ([]domain.Track, error)
+type Track struct {
+	Number int
+	library.Track
+}
 
-	FindTracksInAlbum(domain.Album, FindOption) ([]domain.Track, error)
-	FindTracksInPlaylist(domain.Playlist, FindOption) ([]domain.Track, error)
+type TrackInspector interface {
+	// Tracks creates iterator iterate tracks sorted by track number and title
+	Tracks() ([]Track, error)
 }

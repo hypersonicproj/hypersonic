@@ -26,10 +26,14 @@ type AbsoluteDirPath string
 //
 // This structure allows the repository to organize and search tracks
 // based on artist and album hierarchy.
-func NewRepository(baseDir string) search.Repository {
+func NewRepository(baseDir string) search.Dependencies {
 	fsR := os.DirFS(baseDir)
 	fsW := newFSW(baseDir)
-	return &filesystem{read: fsR, write: fsW}
+	fs := filesystem{read: fsR, write: fsW}
+	return search.Dependencies{
+		AlbumsRepository:    newAlbumsRepository(fs.read),
+		PlaylistsRepository: newPlaylistsRepository(fs.read),
+	}
 }
 
 type filesystem struct {

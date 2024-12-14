@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"hypersonic/internal/infrastructure/api/http"
 	"hypersonic/internal/infrastructure/datasource/filesystem"
-	"hypersonic/internal/interface-adapter/handler/graphql/graph"
+	"hypersonic/internal/interface-adapter/handler/graphql"
 	"hypersonic/internal/usecase/search"
 	"log/slog"
 	"os"
@@ -54,14 +54,14 @@ type dependencies struct {
 	Usecase depsUsecase
 }
 type depsUsecase struct {
-	GraphQL graph.Dependencies
+	GraphQL graphql.Dependencies
 }
 
 func loadDependencies(dataDirPath string) dependencies {
 	repository := filesystem.NewRepository(dataDirPath)
 	return dependencies{
 		Usecase: depsUsecase{
-			graph.Dependencies{
+			graphql.Dependencies{
 				Search: search.New(repository),
 			},
 		},

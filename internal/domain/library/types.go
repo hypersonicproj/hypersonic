@@ -1,7 +1,10 @@
-package domain
+package library
+
+import "time"
 
 type Playlist struct {
-	Name string
+	Name      string
+	CreatedAt time.Time
 }
 
 type Id interface {
@@ -10,21 +13,11 @@ type Id interface {
 
 type AlbumId Id
 
-type Album interface {
-	Id() AlbumId
-	Get() album
-}
-
 type AlbumArtist struct {
 	Name string
 }
 
 type TrackId Id
-
-type Track interface {
-	Id() TrackId
-	Get() track
-}
 
 type Artist struct {
 	Name string

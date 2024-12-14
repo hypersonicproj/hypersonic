@@ -14,7 +14,7 @@ type Album struct {
 	ID          string   `json:"id"`
 	Title       string   `json:"title"`
 	Artist      string   `json:"artist"`
-	Genre       string   `json:"genre"`
+	Genre       *string  `json:"genre,omitempty"`
 	ReleaseDate string   `json:"releaseDate"`
 	Year        int      `json:"year"`
 	Tracks      []*Track `json:"tracks"`
@@ -22,9 +22,9 @@ type Album struct {
 }
 
 type Artist struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Genre string `json:"genre"`
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Genre *string `json:"genre,omitempty"`
 }
 
 type Mutation struct {
@@ -50,7 +50,6 @@ type NewTrack struct {
 }
 
 type Playlist struct {
-	ID        string   `json:"id"`
 	Name      string   `json:"name"`
 	Tracks    []*Track `json:"tracks"`
 	CreatedAt string   `json:"createdAt"`
@@ -60,16 +59,16 @@ type Query struct {
 }
 
 type Track struct {
-	ID           string  `json:"id"`
-	Title        string  `json:"title"`
-	Artist       string  `json:"artist"`
-	Album        string  `json:"album"`
-	ArtistArtist string  `json:"artistArtist"`
-	Genre        *string `json:"genre,omitempty"`
-	ReleaseDate  string  `json:"releaseDate"`
-	Year         int     `json:"year"`
-	TrackNumber  int     `json:"trackNumber"`
-	AddedAt      string  `json:"addedAt"`
+	ID          string  `json:"id"`
+	Title       string  `json:"title"`
+	Artist      string  `json:"artist"`
+	Album       string  `json:"album"`
+	AlbumArtist string  `json:"albumArtist"`
+	Genre       *string `json:"genre,omitempty"`
+	ReleaseDate string  `json:"releaseDate"`
+	Year        int     `json:"year"`
+	TrackNumber *int    `json:"trackNumber,omitempty"`
+	AddedAt     string  `json:"addedAt"`
 }
 
 type UploadFile struct {
@@ -122,7 +121,7 @@ type SortAlbumsBy string
 
 const (
 	SortAlbumsByUnspecified SortAlbumsBy = "UNSPECIFIED"
-	SortAlbumsByName        SortAlbumsBy = "NAME"
+	SortAlbumsByTitle       SortAlbumsBy = "TITLE"
 	SortAlbumsByArtist      SortAlbumsBy = "ARTIST"
 	SortAlbumsByRelease     SortAlbumsBy = "RELEASE"
 	SortAlbumsByAdded       SortAlbumsBy = "ADDED"
@@ -130,7 +129,7 @@ const (
 
 var AllSortAlbumsBy = []SortAlbumsBy{
 	SortAlbumsByUnspecified,
-	SortAlbumsByName,
+	SortAlbumsByTitle,
 	SortAlbumsByArtist,
 	SortAlbumsByRelease,
 	SortAlbumsByAdded,
@@ -138,7 +137,7 @@ var AllSortAlbumsBy = []SortAlbumsBy{
 
 func (e SortAlbumsBy) IsValid() bool {
 	switch e {
-	case SortAlbumsByUnspecified, SortAlbumsByName, SortAlbumsByArtist, SortAlbumsByRelease, SortAlbumsByAdded:
+	case SortAlbumsByUnspecified, SortAlbumsByTitle, SortAlbumsByArtist, SortAlbumsByRelease, SortAlbumsByAdded:
 		return true
 	}
 	return false
@@ -253,21 +252,21 @@ type SortTracksBy string
 
 const (
 	SortTracksByUnspecified SortTracksBy = "UNSPECIFIED"
-	SortTracksByName        SortTracksBy = "NAME"
+	SortTracksByTitle       SortTracksBy = "TITLE"
 	SortTracksByRelease     SortTracksBy = "RELEASE"
 	SortTracksByAdded       SortTracksBy = "ADDED"
 )
 
 var AllSortTracksBy = []SortTracksBy{
 	SortTracksByUnspecified,
-	SortTracksByName,
+	SortTracksByTitle,
 	SortTracksByRelease,
 	SortTracksByAdded,
 }
 
 func (e SortTracksBy) IsValid() bool {
 	switch e {
-	case SortTracksByUnspecified, SortTracksByName, SortTracksByRelease, SortTracksByAdded:
+	case SortTracksByUnspecified, SortTracksByTitle, SortTracksByRelease, SortTracksByAdded:
 		return true
 	}
 	return false

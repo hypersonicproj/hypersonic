@@ -1,4 +1,4 @@
-package domain
+package library
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 func LoadAlbum(publisherName string, title string, releasedAt *time.Time, addedAt time.Time) Album {
-	return &album{
+	return Album{
 		Title: title,
 		AlbumArtist: AlbumArtist{
 			Name: publisherName,
@@ -16,19 +16,15 @@ func LoadAlbum(publisherName string, title string, releasedAt *time.Time, addedA
 	}
 }
 
-type album struct {
+type Album struct {
 	Title       string
 	AlbumArtist AlbumArtist
 	ReleasedAt  *time.Time
 	AddedAt     time.Time
 }
 
-func (a *album) Id() AlbumId {
+func (a Album) Id() AlbumId {
 	return AlbumId(&id{
 		text: fmt.Sprintf("%s-%s", a.AlbumArtist.Name, a.Title),
 	})
-}
-
-func (a *album) Get() album {
-	return *a
 }

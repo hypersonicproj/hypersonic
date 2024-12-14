@@ -6,7 +6,7 @@ type Album {
   id: ID!
   title: String!
   artist: String!
-  genre: String!
+  genre: String
   releaseDate: String!
   year: Int!
   tracks: [Track!]!
@@ -16,7 +16,7 @@ type Album {
 type Artist {
   id: ID!
   name: String!
-  genre: String!
+  genre: String
 }
 
 type Track {
@@ -24,16 +24,15 @@ type Track {
   title: String!
   artist: String!
   album: String!
-  artistArtist: String!
+  albumArtist: String!
   genre: String
   releaseDate: String!
   year: Int!
-  trackNumber: Int!
+  trackNumber: Int
   addedAt: String!
 }
 
 type Playlist {
-  id: ID!
   name: String!
   tracks: [Track!]!
   createdAt: String!
@@ -41,7 +40,7 @@ type Playlist {
 
 enum SortAlbumsBy {
   UNSPECIFIED
-  NAME
+  TITLE
   ARTIST
   RELEASE
   ADDED
@@ -54,7 +53,7 @@ enum SortArtistsBy {
 
 enum SortTracksBy {
   UNSPECIFIED
-  NAME
+  TITLE
   RELEASE
   ADDED
 }

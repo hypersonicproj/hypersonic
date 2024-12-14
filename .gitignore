@@ -1,0 +1,7 @@
+# out
+hypersonic
+
+# ci
+.tools/
+cover.out
+cover.html

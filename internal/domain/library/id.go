@@ -1,4 +1,4 @@
-package domain
+package library
 
 type id struct {
 	text string
