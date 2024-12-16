@@ -47,7 +47,7 @@ func (r *queryResolver) Albums(ctx context.Context, sort *model.SortAlbumsBy, or
 	if filterByName != nil {
 		options = append(options, handler.WithFilterByName(*filterByName))
 	}
-	if slices.Contains(graphql.CollectAllFields(ctx), "tracks") {
+	if slices.Contains(r.fieldCollector.Collect(ctx), "tracks") {
 		options = append(options, handler.WithEmbedTracks())
 	}
 	return r.handler.Albums(sortFunc, options...)

@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"context"
 	"hypersonic/internal/interface-adapter/handler"
 )
 
@@ -11,9 +12,14 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 func NewResolver(handler handler.Handler) ResolverRoot {
-	return &Resolver{handler}
+	return &Resolver{handler, &fieldCollectorImpl{}}
 }
 
 type Resolver struct {
-	handler handler.Handler
+	handler        handler.Handler
+	fieldCollector fieldCollector
+}
+
+type fieldCollector interface {
+	Collect(ctx context.Context) []string
 }
