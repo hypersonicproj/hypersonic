@@ -23,8 +23,8 @@ go run cmd/server/main.go -d ~/Downloads/music
   - [http://localhost:8080/hypersonic.v1graphql.MusicLibrary/playground](http://localhost:8080/hypersonic.v1graphql.MusicLibrary/playground)
 
     ```graphql
-    query ($sort: SortAlbumsBy) {
-      albums(sort: $sort) {
+    query ($sort: SortAlbumsBy, $order: Order, $filterByName: String) {
+      albums(sort: $sort, order: $order, filterByName:$filterByName) {
         id
         title
         artist
@@ -39,7 +39,9 @@ go run cmd/server/main.go -d ~/Downloads/music
     }
 
     {
-      "sort": "NAME"
+      "sort": "RELEASE",
+      "order": "DESC",
+      "filterByName": null
     }
     ```
 
