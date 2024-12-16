@@ -7,12 +7,33 @@ func defaultQueryOption() queryOption {
 }
 
 type queryOption struct {
-	embedTracks bool
+	offset       *int
+	limit        *int
+	filterByName *string
+	embedTracks  bool
 }
 
-type queryOptionApplier = options.Applier[queryOption]
+type QueryOptionApplier = options.Applier[queryOption]
 
-func WithEmbedTracks() queryOptionApplier {
+func WithOffset(offset int) QueryOptionApplier {
+	return func(o *queryOption) {
+		o.offset = &offset
+	}
+}
+
+func WithLimit(limit int) QueryOptionApplier {
+	return func(o *queryOption) {
+		o.limit = &limit
+	}
+}
+
+func WithFilterByName(name string) QueryOptionApplier {
+	return func(o *queryOption) {
+		o.filterByName = &name
+	}
+}
+
+func WithEmbedTracks() QueryOptionApplier {
 	return func(o *queryOption) {
 		o.embedTracks = true
 	}

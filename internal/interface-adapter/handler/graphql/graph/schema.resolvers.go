@@ -25,7 +25,7 @@ func (r *mutationResolver) UploadAlbum(ctx context.Context, album model.NewAlbum
 }
 
 // Albums is the resolver for the Albums field.
-func (r *queryResolver) Albums(ctx context.Context, sort *model.SortAlbumsBy, order *model.Order) ([]*model.Album, error) {
+func (r *queryResolver) Albums(ctx context.Context, sort *model.SortAlbumsBy, order *model.Order, filterByName *string) ([]*model.Album, error) {
 	sortFunc := handler.SortAlbumByReleaseDate()
 	if sort != nil {
 		switch *sort {
@@ -43,14 +43,18 @@ func (r *queryResolver) Albums(ctx context.Context, sort *model.SortAlbumsBy, or
 		sortFunc = handler.Desc(sortFunc)
 	}
 
-	if slices.Contains(graphql.CollectAllFields(ctx), "tracks") {
-		return r.handler.Albums(sortFunc, handler.WithEmbedTracks())
+	options := []handler.QueryOptionApplier{}
+	if filterByName != nil {
+		options = append(options, handler.WithFilterByName(*filterByName))
 	}
-	return r.handler.Albums(sortFunc)
+	if slices.Contains(graphql.CollectAllFields(ctx), "tracks") {
+		options = append(options, handler.WithEmbedTracks())
+	}
+	return r.handler.Albums(sortFunc, options...)
 }
 
 // Playlists is the resolver for the Playlists field.
-func (r *queryResolver) Playlists(ctx context.Context, sort *model.SortPlaylistsBy, order *model.Order) ([]*model.Playlist, error) {
+func (r *queryResolver) Playlists(ctx context.Context, sort *model.SortPlaylistsBy, order *model.Order, filterByName *string) ([]*model.Playlist, error) {
 	sortFunc := handler.SortPlaylistByCreatedAt()
 	if sort != nil {
 		switch *sort {
@@ -64,10 +68,14 @@ func (r *queryResolver) Playlists(ctx context.Context, sort *model.SortPlaylists
 		sortFunc = handler.Desc(sortFunc)
 	}
 
-	if slices.Contains(graphql.CollectAllFields(ctx), "tracks") {
-		return r.handler.Playlists(sortFunc, handler.WithEmbedTracks())
+	options := []handler.QueryOptionApplier{}
+	if filterByName != nil {
+		options = append(options, handler.WithFilterByName(*filterByName))
 	}
-	return r.handler.Playlists(sortFunc)
+	if slices.Contains(graphql.CollectAllFields(ctx), "tracks") {
+		options = append(options, handler.WithEmbedTracks())
+	}
+	return r.handler.Playlists(sortFunc, options...)
 }
 
 // Mutation returns MutationResolver implementation.

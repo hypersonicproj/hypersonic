@@ -3,11 +3,12 @@ package handler
 import (
 	"hypersonic/internal/interface-adapter/handler/graphql/graph/model"
 	"hypersonic/internal/pkg/tree"
+	"strings"
 
 	"github.com/tingtt/options"
 )
 
-func (h *handler) Playlists(sortFunc SortYield[*model.Playlist], optionAppliers ...queryOptionApplier) ([]*model.Playlist, error) {
+func (h *handler) Playlists(sortFunc SortYield[*model.Playlist], optionAppliers ...QueryOptionApplier) ([]*model.Playlist, error) {
 	query := options.CreateWithDefault(defaultQueryOption(), optionAppliers...)
 
 	var root *tree.Node[*model.Playlist]
@@ -21,6 +22,12 @@ func (h *handler) Playlists(sortFunc SortYield[*model.Playlist], optionAppliers 
 			return nil, err
 		}
 
+		if query.filterByName != nil {
+			if strings.Contains(playlistModel.Name, *query.filterByName) {
+				root = tree.Insert(root, &playlistModel, sortFunc)
+			}
+			continue
+		}
 		root = tree.Insert(root, &playlistModel, sortFunc)
 	}
 	playlists := []*model.Playlist{}

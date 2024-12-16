@@ -76,8 +76,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Albums    func(childComplexity int, sort *model.SortAlbumsBy, order *model.Order) int
-		Playlists func(childComplexity int, sort *model.SortPlaylistsBy, order *model.Order) int
+		Albums    func(childComplexity int, sort *model.SortAlbumsBy, order *model.Order, filterByName *string) int
+		Playlists func(childComplexity int, sort *model.SortPlaylistsBy, order *model.Order, filterByName *string) int
 	}
 
 	Track struct {
@@ -99,8 +99,8 @@ type MutationResolver interface {
 	UploadAlbum(ctx context.Context, album model.NewAlbum) (*model.Album, error)
 }
 type QueryResolver interface {
-	Albums(ctx context.Context, sort *model.SortAlbumsBy, order *model.Order) ([]*model.Album, error)
-	Playlists(ctx context.Context, sort *model.SortPlaylistsBy, order *model.Order) ([]*model.Playlist, error)
+	Albums(ctx context.Context, sort *model.SortAlbumsBy, order *model.Order, filterByName *string) ([]*model.Album, error)
+	Playlists(ctx context.Context, sort *model.SortPlaylistsBy, order *model.Order, filterByName *string) ([]*model.Playlist, error)
 }
 
 type executableSchema struct {
@@ -254,7 +254,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Albums(childComplexity, args["sort"].(*model.SortAlbumsBy), args["order"].(*model.Order)), true
+		return e.complexity.Query.Albums(childComplexity, args["sort"].(*model.SortAlbumsBy), args["order"].(*model.Order), args["filterByName"].(*string)), true
 
 	case "Query.playlists":
 		if e.complexity.Query.Playlists == nil {
@@ -266,7 +266,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Playlists(childComplexity, args["sort"].(*model.SortPlaylistsBy), args["order"].(*model.Order)), true
+		return e.complexity.Query.Playlists(childComplexity, args["sort"].(*model.SortPlaylistsBy), args["order"].(*model.Order), args["filterByName"].(*string)), true
 
 	case "Track.addedAt":
 		if e.complexity.Track.AddedAt == nil {
@@ -547,6 +547,11 @@ func (ec *executionContext) field_Query_albums_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["order"] = arg1
+	arg2, err := ec.field_Query_albums_argsFilterByName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filterByName"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Query_albums_argsSort(
@@ -575,6 +580,19 @@ func (ec *executionContext) field_Query_albums_argsOrder(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_albums_argsFilterByName(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filterByName"))
+	if tmp, ok := rawArgs["filterByName"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_playlists_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -588,6 +606,11 @@ func (ec *executionContext) field_Query_playlists_args(ctx context.Context, rawA
 		return nil, err
 	}
 	args["order"] = arg1
+	arg2, err := ec.field_Query_playlists_argsFilterByName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filterByName"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Query_playlists_argsSort(
@@ -613,6 +636,19 @@ func (ec *executionContext) field_Query_playlists_argsOrder(
 	}
 
 	var zeroVal *model.Order
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_playlists_argsFilterByName(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filterByName"))
+	if tmp, ok := rawArgs["filterByName"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -1488,7 +1524,7 @@ func (ec *executionContext) _Query_albums(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Albums(rctx, fc.Args["sort"].(*model.SortAlbumsBy), fc.Args["order"].(*model.Order))
+		return ec.resolvers.Query().Albums(rctx, fc.Args["sort"].(*model.SortAlbumsBy), fc.Args["order"].(*model.Order), fc.Args["filterByName"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1561,7 +1597,7 @@ func (ec *executionContext) _Query_playlists(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Playlists(rctx, fc.Args["sort"].(*model.SortPlaylistsBy), fc.Args["order"].(*model.Order))
+		return ec.resolvers.Query().Playlists(rctx, fc.Args["sort"].(*model.SortPlaylistsBy), fc.Args["order"].(*model.Order), fc.Args["filterByName"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

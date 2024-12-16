@@ -70,8 +70,12 @@ enum Order {
 }
 
 type Query {
-  albums(sort: SortAlbumsBy, order: Order): [Album!]!
-  playlists(sort: SortPlaylistsBy, order: Order): [Playlist!]!
+  albums(sort: SortAlbumsBy, order: Order, filterByName: String): [Album!]!
+  playlists(
+    sort: SortPlaylistsBy
+    order: Order
+    filterByName: String
+  ): [Playlist!]!
 }
 
 scalar Upload
